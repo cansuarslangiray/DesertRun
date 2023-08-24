@@ -8,9 +8,10 @@ public class LevelDistance : MonoBehaviour
     [SerializeField] private GameObject disDisplay;
     [SerializeField] private int disRun;
     [SerializeField] private bool addingDis =false;
-   
+    [SerializeField] private float disDilay = 0.35f;
 
-    
+
+
     void Update()
     {
         if (addingDis == false)
@@ -24,7 +25,7 @@ public class LevelDistance : MonoBehaviour
     {
         disRun++;
         disDisplay.GetComponent<Text>().text = "" + disRun;
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(disDilay);
         addingDis = false;
     }
 }
