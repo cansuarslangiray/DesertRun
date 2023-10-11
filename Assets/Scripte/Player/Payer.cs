@@ -8,8 +8,6 @@ using Vector3 = UnityEngine.Vector3;
 public class Payer : MonoBehaviour
 {
     [SerializeField] private float leftRightSpeed = 4f;
-    private bool _isJumping = false;
-    public GameObject feet;
 
     private Animator _animator;
     private CharacterController _characterController;
@@ -19,28 +17,32 @@ public class Payer : MonoBehaviour
     public float maxSpeed = 45.0f; // The maximum speed the player can reach.
     public float speedIncreaseInterval = 50.0f; // How often to increase speed.
     public float speedIncreaseAmount = 1.0f; // How much to increase speed each time.
-    public static bool isOnFloor = true;
-    
+
     private float _currentSpeed;
     private float _timer;
+    private bool _isJumping;
+    private Vector3 _currentJumpVelocity;
+    public static bool IsDead =false;
 
 
     private void Start()
     {
         _characterController = GetComponent<CharacterController>();
         _animator = GetComponentInChildren<Animator>();
-        _rigidbody = GetComponent<Rigidbody>();
         _currentSpeed = initialSpeed;
         _timer = 0f;
     }
 
     private void Update()
     {
-        Debug.DrawRay(feet.transform.position, Vector3.down/2, Color.red);
-        Movement();
+        if (!IsDead)
+        {
+            CharacterControllerMovement();
+        }
     }
 
-    private void Movement()
+
+    private void CharacterControllerMovement()
     {
         _timer += Time.deltaTime;
 
@@ -54,40 +56,45 @@ public class Payer : MonoBehaviour
             _timer = 0f;
         }
 
-        transform.Translate(Vector3.forward * _currentSpeed * Time.deltaTime, Space.World);
         leftRightSpeed = _currentSpeed + 1;
+        Vector3 moveVelocity = Vector3.zero;
 
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+        moveVelocity.x = Input.GetAxis("Horizontal") * leftRightSpeed;
+        moveVelocity.z = _currentSpeed;
+
+        if (Input.GetButtonDown("Jump"))
         {
-            if (this.gameObject.transform.position.x > LevelBoundary.LeftSide)
+            if (!_isJumping)
             {
-                transform.Translate(Vector3.left * leftRightSpeed * Time.deltaTime);
+                _isJumping = true;
+                _animator.SetBool("IsJumping", true);
+                _currentJumpVelocity = Vector3.up * 5;
             }
         }
 
-        else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+        if (_isJumping)
         {
-            if (this.gameObject.transform.position.x < LevelBoundary.RightSide)
+            _characterController.Move((moveVelocity + _currentJumpVelocity) * Time.deltaTime);
+            _currentJumpVelocity += Physics.gravity * Time.deltaTime;
+            if (_characterController.isGrounded)
             {
-                transform.Translate(Vector3.right * leftRightSpeed * Time.deltaTime);
+                _isJumping = false;
+                _animator.SetBool("IsJumping", false);
             }
         }
-        else if (Input.GetKey(KeyCode.Space))
+        else
         {
-            _animator.SetBool("IsJumping", !isOnFloor);
-            _rigidbody.AddForce(transform.up * 5f);
-            IsGrounded();
+            _characterController.SimpleMove(moveVelocity);
         }
     }
 
-    private void IsGrounded()
+    private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-       /* var position = feet.transform.position;
-        if (Physics.Raycast(position, Vector3.down, 1f))
+        if (hit.gameObject.CompareTag("Obstacle"))
         {
-            Debug.Log("HEYY");
-            _isJumping = false;
-            _animator.SetBool("IsJumping", false);
-        }*/
+            Debug.Log("olllummmm");
+            _animator.SetTrigger("IsDead");
+            IsDead = true;
+        }
     }
 }

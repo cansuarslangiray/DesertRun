@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,25 +8,24 @@ public class LevelDistance : MonoBehaviour
 {
     [SerializeField] private GameObject disDisplay;
     [SerializeField] private int disRun;
-    [SerializeField] private bool addingDis =false;
+    [SerializeField] private bool addingDis = false;
     [SerializeField] private float disDilay = 0.35f;
 
-
-
-    void Update()
+    private void Start()
     {
-        if (addingDis == false)
-        {
-            addingDis = true;
-            StartCoroutine(AddingDis());
-        }
+        StartCoroutine(AddingDis());
     }
+
 
     IEnumerator AddingDis()
     {
-        disRun++;
-        disDisplay.GetComponent<Text>().text = "" + disRun;
-        yield return new WaitForSeconds(disDilay);
-        addingDis = false;
+        while (!Payer.IsDead)
+        {
+            disRun++;
+            disDisplay.GetComponent<Text>().text = "" + disRun;
+            yield return new WaitForSeconds(disDilay);
+        }
+
+        yield break;
     }
 }
